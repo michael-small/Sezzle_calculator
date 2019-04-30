@@ -1,10 +1,15 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, Input, OnInit} from '@angular/core';
 import {RideListService} from './ride-list.service';
 import {Ride} from './ride';
 import {Observable} from 'rxjs/Observable';
 import {MatDialog} from "@angular/material";
 import {DeleteRideComponent} from "./delete-ride.component";
 import {joinRideObject} from "./joinRideObject";
+
+import 'rxjs/add/observable/interval';
+import 'rxjs/add/operator/startWith';
+import 'rxjs/add/operator/switchMap';
+
 
 @Component({
   selector: 'ride-list-component',
@@ -32,18 +37,56 @@ export class RideListComponent implements OnInit {
   public currUserId = localStorage.getItem("userId");
   public currUserFullName = localStorage.getItem("userFullName");
 
+  @Input() products$: Observable<any>;
+
   // Inject the RideListService into this component.
   constructor(public rideListService: RideListService, public dialog: MatDialog) {
  //   rideListService.addListener(this);
   }
 
   ngOnInit(): void {
+
+    //Tamas Piros, 26 June 2018, https://blog.fullstacktraining.com/display-real-time-data-in-angular/
+    //Allows real time updates of app whenever something is updated
+    this.products$ = Observable
+      .interval(1000)
+      .startWith(0).switchMap(() => this.rideListService.getRides());
+
     this.rideListService.refreshNeeded$
       .subscribe(() => {
         this.refreshRides();
       });
     // this.refreshRides();
     this.loadService();
+  }
+
+  refreshRides(): Observable<Ride[]> {
+    // Get Rides returns an Observable, basically a "promise" that
+    // we will get the data from the server.
+    //
+    // Subscribe waits until the data is fully downloaded, then
+    // performs an action on it (the first lambda)
+
+    const rides: Observable<Ride[]> = this.rideListService.getRides();
+    rides.subscribe(
+      rides => {
+        this.rides = rides;
+      },
+      err => {
+        console.log(err);
+      });
+    return rides;
+  }
+
+  loadService(): void {
+    this.rideListService.getRides().subscribe(
+      rides => {
+        this.rides = rides;
+      },
+      err => {
+        console.log(err);
+      }
+    );
   }
 
   // These methods are used in ngIf statements that deal with displaying dates and times. The thing is that
@@ -59,7 +102,6 @@ export class RideListComponent implements OnInit {
   public checkImpossibleTime(ride: Ride) {
     return (ride.departureTime.includes("99") || ride.departureTime === "")
   }
-
 
   // These three methods are mainly used for checking if a user is allowed to join a ride, but some are also used in
   // ngIf statements for displaying certain elements on the ride cards.
@@ -79,100 +121,10 @@ export class RideListComponent implements OnInit {
     return (ride.passengerIds.indexOf(this.currUserId) !== -1);
   }
 
-  // These two methods are used in the HTML instead of ngModel, since it solves a problem where
-  // clicking on the checkbox didn't always 'uncheck' the box. Implementing this method with
-  // (click)=toggleNonSmoking, and checked="rideNonSmoking", fixes that bothersome problem.
-  public toggleNonSmoking() {
-    this.rideNonSmoking = !this.rideNonSmoking;
-  }
-  public toggleRoundTrip() {
-    this.rideRoundTrip = !this.rideRoundTrip;
-  }
-
-
-  public filterRides(searchDestination: string, searchOrigin: string,
-                     searchIsDriving: boolean, searchNonSmoking: boolean,
-                     searchRoundTrip): Ride[] {
-
-    this.filteredRides = this.rides;
-
-    // Filter by destination
-    if (searchDestination != null) {
-      searchDestination = searchDestination.toLocaleLowerCase();
-
-      this.filteredRides = this.filteredRides.filter(ride => {
-        return !searchDestination || ride.destination.toLowerCase().indexOf(searchDestination) !== -1;
-      });
-    }
-
-    // Filter by origin
-    if (searchOrigin != null) {
-      searchOrigin = searchOrigin.toLocaleLowerCase();
-
-      this.filteredRides = this.filteredRides.filter(ride => {
-        return !searchOrigin || ride.origin.toLowerCase().indexOf(searchOrigin) !== -1;
-      });
-    }
-
-    if (searchIsDriving != null) {
-
-      this.filteredRides = this.filteredRides.filter(ride => {
-        return ride.isDriving === searchIsDriving;
-      });
-    }
-
-    // We only check for true, so that an unchecked box allows all rides to come through.
-    if (searchNonSmoking === true) {
-
-      this.filteredRides = this.filteredRides.filter(ride => {
-        return ride.nonSmoking === searchNonSmoking;
-      });
-    }
-
-    if (searchRoundTrip === true) {
-
-      this.filteredRides = this.filteredRides.filter(ride => {
-        return ride.roundTrip === searchRoundTrip;
-      });
-    }
-
-    return this.filteredRides;
-  }
-
   /**
    * Starts an asynchronous operation to update the rides list
    *
    */
-  refreshRides(): Observable<Ride[]> {
-    // Get Rides returns an Observable, basically a "promise" that
-    // we will get the data from the server.
-    //
-    // Subscribe waits until the data is fully downloaded, then
-    // performs an action on it (the first lambda)
-
-    const rides: Observable<Ride[]> = this.rideListService.getRides();
-    rides.subscribe(
-      rides => {
-        this.rides = rides;
-        this.filterRides(this.rideDestination, this.rideOrigin, this.rideDriving,
-          this.rideNonSmoking, this.rideRoundTrip);
-      },
-      err => {
-        console.log(err);
-      });
-    return rides;
-  }
-
-  loadService(): void {
-    this.rideListService.getRides().subscribe(
-      rides => {
-        this.rides = rides;
-      },
-      err => {
-        console.log(err);
-      }
-    );
-  }
 
   /**
    * Parses ISO dates for human readable month/day, adds ordinal suffixes
