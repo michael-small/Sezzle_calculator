@@ -51,10 +51,6 @@ export class RideListService {
       );
   }
 
-
-
-
-
   joinRide(editedRide: joinRideObject) {
 
     const httpOptions = {
