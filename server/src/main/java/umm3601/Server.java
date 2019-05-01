@@ -28,6 +28,11 @@ public class Server {
 
   public static void main(String[] args) {
 
+//    webSocket("/socket", WebSocketHandler.class);
+//    staticFileLocation("static");
+//    port(8080);
+//    init();
+
     // DATABASE
     MongoClient mongoClient = new MongoClient();
     MongoDatabase database = mongoClient.getDatabase(databaseName);

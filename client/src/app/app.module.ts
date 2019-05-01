@@ -32,6 +32,8 @@ import {ProfileComponent} from "./users/profile.component";
 
 import {RouterLinkDirectiveStub} from "./rides/router-link-directive-stub";
 import {PhoneMaskDirective} from "./users/phone-mask.directive";
+import {CalculatorComponent} from './calculator/calculator.component';
+import {MatGridListModule} from "@angular/material";
 
 @NgModule({
   imports: [
@@ -43,7 +45,8 @@ import {PhoneMaskDirective} from "./users/phone-mask.directive";
     MatDatepickerModule,
     MatRadioModule,
     MatSelectModule,
-    MatCheckboxModule
+    MatCheckboxModule,
+    MatGridListModule
   ],
   declarations: [
     AppComponent,
@@ -54,7 +57,8 @@ import {PhoneMaskDirective} from "./users/phone-mask.directive";
     DeleteRideComponent,
     ProfileComponent,
     RouterLinkDirectiveStub,
-    PhoneMaskDirective
+    PhoneMaskDirective,
+    CalculatorComponent
   ],
   providers: [
     RideListService, AppService, AppAuthGuard, UserService, ValidatorService,

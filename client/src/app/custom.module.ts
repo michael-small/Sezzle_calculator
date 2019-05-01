@@ -47,7 +47,7 @@ const MATERIAL_MODULES: any[] = [
   MatDatepickerModule,
   MatRadioModule,
   MatCheckboxModule,
-  MatSnackBarModule,
+  MatSnackBarModule
 ];
 
 const COVALENT_MODULES: any[] = [
